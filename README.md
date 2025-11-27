@@ -1,3 +1,10 @@
+## TEAM: SUDO MOTTO
+- Borabo, Aira
+- Dela Cruz, Angel Jared
+- Mariñas, Justin Kylle
+- Medina, Karylle Jade
+- Obligado, Athena Ashley
+
 # Trivia App
 
 A simple Python Flask-based trivia application that displays trivia questions and answers locally, serves them via API, and allows adding new questions.
