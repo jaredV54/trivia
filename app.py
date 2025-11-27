@@ -49,7 +49,6 @@ def get_random_question():
 
 if __name__ == "__main__":
     try:
-        # Try to start ngrok tunnel
         public_url = ngrok.connect(5000)
         print(f"Ngrok tunnel: {public_url}")
     except Exception as e:
