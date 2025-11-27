@@ -4,8 +4,93 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TRIVIA GENERATOR</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .question { margin-bottom: 20px; border: 1px solid #ccc; padding: 10px; }
+        .answer { color: rgb(40, 121, 153); }
+        form { margin-top: 20px; }
+        input, button { margin: 5px; padding: 8px; }
+    </style>
 </head>
 <body>
-    
+    <h1>Trivia Questions</h1>
+
+    <h2>All Questions</h2>
+    <div id="questions">
+        {% for q in questions %}
+        <div class="question">
+            <strong>{{ q.question }}</strong><br>
+            <span class="answer">Answer: {{ q.answer }}</span><br>
+            <em>Category: {{ q.category }}</em>
+        </div>
+        {% endfor %}
+    </div>
+
+    <h2>Random Question</h2>
+    <button id="randomBtn">Get Random Question</button>
+    <button id="toggleBtn">Toggle Answers</button>
+    <div id="randomQuestion" style="display: none;">
+        <div class="question">
+            <strong id="randomQ"></strong><br>
+            <span class="answer" id="randomA" style="display: none;">Answer: <span id="answerText"></span></span><br>
+            <em id="randomCat"></em>
+        </div>
+    </div>
+
+    <h2>Add New Question</h2>
+    <form id="addForm">
+        <input type="text" id="question" placeholder="Question" required><br>
+        <input type="text" id="answer" placeholder="Answer" required><br>
+        <input type="text" id="category" placeholder="Category (optional)"><br>
+        <button type="submit">Add Question</button>
+    </form>
+
+    <script>
+        document.getElementById('addForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const question = document.getElementById('question').value;
+            const answer = document.getElementById('answer').value;
+            const category = document.getElementById('category').value || 'General';
+
+            fetch('/api/questions', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ question, answer, category })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    alert(data.error);
+                } else {
+                    location.reload();
+                }
+            });
+        });
+
+        document.getElementById('randomBtn').addEventListener('click', function() {
+            fetch('/api/questions/random')
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    alert(data.error);
+                } else {
+                    document.getElementById('randomQ').textContent = data.question;
+                    document.getElementById('answerText').textContent = data.answer;
+                    document.getElementById('randomCat').textContent = 'Category: ' + data.category;
+                    document.getElementById('randomQuestion').style.display = 'block';
+                    document.getElementById('randomA').style.display = 'none'; // Hide answer initially
+                }
+            });
+        });
+
+        document.getElementById('toggleBtn').addEventListener('click', function() {
+            const answerSpan = document.getElementById('randomA');
+            if (answerSpan.style.display === 'none') {
+                answerSpan.style.display = 'inline';
+            } else {
+                answerSpan.style.display = 'none';
+            }
+        });
+    </script>
 </body>
 </html>
