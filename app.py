@@ -17,7 +17,15 @@ class Question:
 
 questions = [
     Question("What is the capital of France?", "Paris", "Geography"),
-    Question("What is 2 + 2?", "4", "Math")
+    Question("What is 2 + 2?", "4", "Math"),
+    Question("Who wrote 'Romeo and Juliet'?", "William Shakespeare", "Literature"),
+    Question("What is the largest planet in our solar system?", "Jupiter", "Science"),
+    Question("In which year did World War II end?", "1945", "History"),
+    Question("What is the chemical symbol for gold?", "Au", "Science"),
+    Question("Which ocean is the largest?", "Pacific Ocean", "Geography"),
+    Question("What is the square root of 144?", "12", "Math"),
+    Question("Who painted the Mona Lisa?", "Leonardo da Vinci", "Art"),
+    Question("What is the capital of Japan?", "Tokyo", "Geography")
 ]
 
 app = Flask(__name__, template_folder='template')

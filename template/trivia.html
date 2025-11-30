@@ -5,92 +5,328 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TRIVIA GENERATOR</title>
     <style>
-        body { font-family: Arial, sans-serif; margin: 20px; }
-        .question { margin-bottom: 20px; border: 1px solid #ccc; padding: 10px; }
-        .answer { color: rgb(40, 121, 153); }
-        form { margin-top: 20px; }
-        input, button { margin: 5px; padding: 8px; }
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500&display=swap');
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            margin: 0;
+            padding: 10px;
+            background-color: #f5f5f5;
+            color: #333;
+            line-height: 1.5;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 6px;
+            box-shadow: 0 1px 5px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-weight: 300;
+            font-size: 1.8em;
+        }
+
+        h2 {
+            color: #34495e;
+            border-bottom: 1px solid #ecf0f1;
+            padding-bottom: 5px;
+            margin-top: 30px;
+            margin-bottom: 15px;
+            font-weight: 400;
+            font-size: 1.2em;
+        }
+
+        ul {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        .question {
+            margin-bottom: 10px;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+        }
+
+        .answer {
+            color: #666;
+            font-weight: 500;
+        }
+
+        form {
+            margin-top: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        input, button {
+            padding: 10px;
+            border: 1px solid #bdc3c7;
+            border-radius: 4px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #666;
+            box-shadow: 0 0 5px rgba(102, 102, 102, 0.3);
+        }
+
+        button {
+            background-color: #666;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        button:hover {
+            background-color: #555;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            width: 100%;
+            margin-bottom: 20px;
+        }
+
+        .button-group > button {
+            flex: 1;
+        }
+
+        #pagination {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 15px;
+            padding-top: 10px;
+            border-top: 1px solid #ecf0f1;
+        }
+
+        #totalCount {
+            font-weight: 500;
+        }
+
+        #randomQuestion {
+            margin-top: 15px;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 15px;
+            }
+            body {
+                padding: 5px;
+            }
+        }
     </style>
 </head>
 <body>
-    <h1>Trivia Questions</h1>
+    <div class="container">
+        <h1>Trivia Questions</h1>
 
-    <h2>All Questions</h2>
-    <div id="questions">
-        {% for q in questions %}
-        <div class="question">
-            <strong>{{ q.question }}</strong><br>
-            <span class="answer">Answer: {{ q.answer }}</span><br>
-            <em>Category: {{ q.category }}</em>
+    <div class="button-group main-buttons">
+        <button id="showAllBtn">Show All Questions</button>
+        <button id="randomBtn">Ask Random Question</button>
+        <button id="toggleBtn" style="display: none;">Toggle Answer</button>
+    </div>
+    <div id="questionsContainer" style="display: none;">
+        <ul id="questions"></ul>
+        <div id="pagination">
+            <span id="totalCount"></span>
+            <button id="prevBtn" disabled>Previous</button>
+            <span id="pageInfo"></span>
+            <button id="nextBtn" disabled>Next</button>
         </div>
-        {% endfor %}
     </div>
 
-    <h2>Random Question</h2>
-    <button id="randomBtn">Get Random Question</button>
-    <button id="toggleBtn">Toggle Answers</button>
     <div id="randomQuestion" style="display: none;">
-        <div class="question">
-            <strong id="randomQ"></strong><br>
-            <span class="answer" id="randomA" style="display: none;">Answer: <span id="answerText"></span></span><br>
-            <em id="randomCat"></em>
-        </div>
+        <ul>
+            <li class="question">
+                <strong id="randomQ"></strong><br>
+                <span class="answer" id="randomA" style="display: none;">Answer: <span id="answerText"></span></span><br>
+                <em id="randomCat"></em>
+            </li>
+        </ul>
     </div>
 
     <h2>Add New Question</h2>
     <form id="addForm">
-        <input type="text" id="question" placeholder="Question" required><br>
-        <input type="text" id="answer" placeholder="Answer" required><br>
-        <input type="text" id="category" placeholder="Category (optional)"><br>
+        <input type="text" id="question" placeholder="Question" required>
+        <input type="text" id="answer" placeholder="Answer" required>
+        <input type="text" id="category" placeholder="Category (optional)">
         <button type="submit">Add Question</button>
     </form>
 
     <script>
-        document.getElementById('addForm').addEventListener('submit', function(e) {
+        let allQuestions = [];
+        let currentPage = 1;
+        const itemsPerPage = 5;
+
+        const showAllBtn = document.getElementById('showAllBtn');
+        const randomBtn = document.getElementById('randomBtn');
+        const toggleBtn = document.getElementById('toggleBtn');
+        const questionsContainer = document.getElementById('questionsContainer');
+        const randomQuestionDiv = document.getElementById('randomQuestion');
+        const randomA = document.getElementById('randomA');
+
+        function displayPage(page) {
+            currentPage = page;
+            const start = (page - 1) * itemsPerPage;
+            const end = start + itemsPerPage;
+            const pageQuestions = allQuestions.slice(start, end);
+            const ul = document.getElementById('questions');
+            ul.innerHTML = '';
+            pageQuestions.forEach(q => {
+                const li = document.createElement('li');
+                li.className = 'question';
+                li.innerHTML = `<strong>${escapeHtml(q.question)}</strong><br><span class="answer">Answer: ${escapeHtml(q.answer)}</span><br><em>Category: ${escapeHtml(q.category)}</em>`;
+                ul.appendChild(li);
+            });
+            document.getElementById('totalCount').textContent = `Total: ${allQuestions.length}`;
+            const totalPages = Math.max(1, Math.ceil(allQuestions.length / itemsPerPage));
+            document.getElementById('pageInfo').textContent = `Page ${page} of ${totalPages}`;
+            document.getElementById('prevBtn').disabled = page === 1;
+            document.getElementById('nextBtn').disabled = page === totalPages;
+        }
+
+        function escapeHtml(str = '') {
+            return String(str)
+                .replaceAll('&', '&amp;')
+                .replaceAll('<', '&lt;')
+                .replaceAll('>', '&gt;')
+                .replaceAll('"', '&quot;')
+                .replaceAll("'", '&#39;');
+        }
+
+        function showRandomQuestion(data) {
+            document.getElementById('randomQ').textContent = data.question || '';
+            document.getElementById('answerText').textContent = data.answer || '';
+            document.getElementById('randomCat').textContent = 'Category: ' + (data.category || 'General');
+            randomQuestionDiv.style.display = 'block';
+            questionsContainer.style.display = 'none';
+            showAllBtn.textContent = 'Show All Questions';
+
+            randomA.style.display = 'none';
+            toggleBtn.style.display = 'inline-block';
+        }
+
+        function hideRandomQuestion() {
+            randomQuestionDiv.style.display = 'none';
+            toggleBtn.style.display = 'none';
+        }
+
+        showAllBtn.addEventListener('click', function () {
+            if (questionsContainer.style.display === 'none') {
+                if (allQuestions.length === 0) {
+                    fetch('/api/questions')
+                        .then(response => response.json())
+                        .then(data => {
+                            allQuestions = Array.isArray(data) ? data : [];
+                            if (allQuestions.length === 0) {
+                                alert('No questions found.');
+                                return;
+                            }
+                            displayPage(1);
+                            questionsContainer.style.display = 'block';
+                            hideRandomQuestion();
+                            showAllBtn.textContent = 'Hide All Questions';
+                        })
+                        .catch(err => {
+                            console.error(err);
+                            alert('Failed to fetch questions.');
+                        });
+                } else {
+                    displayPage(1);
+                    questionsContainer.style.display = 'block';
+                    hideRandomQuestion();
+                    showAllBtn.textContent = 'Hide All Questions';
+                }
+            } else {
+                questionsContainer.style.display = 'none';
+                showAllBtn.textContent = 'Show All Questions';
+            }
+        });
+
+        randomBtn.addEventListener('click', function () {
+            fetch('/api/questions/random')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        alert(data.error);
+                    } else {
+                        showRandomQuestion(data);
+                    }
+                })
+                .catch(err => {
+                    console.error(err);
+                    alert('Failed to fetch a random question.');
+                });
+        });
+
+        toggleBtn.addEventListener('click', function () {
+            if (randomA.style.display === 'none' || randomA.style.display === '') {
+                randomA.style.display = 'inline';
+            } else {
+                randomA.style.display = 'none';
+            }
+        });
+
+        document.getElementById('prevBtn').addEventListener('click', function () {
+            if (currentPage > 1) displayPage(currentPage - 1);
+        });
+
+        document.getElementById('nextBtn').addEventListener('click', function () {
+            const totalPages = Math.ceil(allQuestions.length / itemsPerPage) || 1;
+            if (currentPage < totalPages) displayPage(currentPage + 1);
+        });
+
+        document.getElementById('addForm').addEventListener('submit', function (e) {
             e.preventDefault();
-            const question = document.getElementById('question').value;
-            const answer = document.getElementById('answer').value;
-            const category = document.getElementById('category').value || 'General';
+            const question = document.getElementById('question').value.trim();
+            const answer = document.getElementById('answer').value.trim();
+            const category = document.getElementById('category').value.trim() || 'General';
+            if (!question || !answer) return alert('Question and answer are required.');
 
             fetch('/api/questions', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ question, answer, category })
             })
-            .then(response => response.json())
-            .then(data => {
-                if (data.error) {
-                    alert(data.error);
-                } else {
-                    location.reload();
-                }
-            });
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        alert(data.error);
+                    } else {
+                        if (allQuestions.length > 0) {
+                            allQuestions.push({ question, answer, category });
+                        }
+                        questionsContainer.style.display = 'none';
+                        showAllBtn.textContent = 'Show All Questions';
+                        location.reload();
+                    }
+                })
+                .catch(err => {
+                    console.error(err);
+                    alert('Failed to add question.');
+                });
         });
 
-        document.getElementById('randomBtn').addEventListener('click', function() {
-            fetch('/api/questions/random')
-            .then(response => response.json())
-            .then(data => {
-                if (data.error) {
-                    alert(data.error);
-                } else {
-                    document.getElementById('randomQ').textContent = data.question;
-                    document.getElementById('answerText').textContent = data.answer;
-                    document.getElementById('randomCat').textContent = 'Category: ' + data.category;
-                    document.getElementById('randomQuestion').style.display = 'block';
-                    document.getElementById('randomA').style.display = 'none';
-                }
-            });
-        });
-
-        document.getElementById('toggleBtn').addEventListener('click', function() {
-            const answerSpan = document.getElementById('randomA');
-            if (answerSpan.style.display === 'none') {
-                answerSpan.style.display = 'inline';
-            } else {
-                answerSpan.style.display = 'none';
-            }
-        });
+        hideRandomQuestion();
     </script>
+
+    </div>
 </body>
 </html>
